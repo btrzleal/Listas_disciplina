@@ -1,0 +1,30 @@
+library(janitor)
+library(readxl)
+library(dplyr)
+options(scipen = 100, digits = 4)
+
+dados <- read_excel("~/dados2.xlsx")
+
+# Considere o conjunto de dados com duas variáveis, 
+# onde X é uma variável quantitativa contínua e Y é uma variável qualitativa. 
+# Calcule a média, mediana, variância, desvio padrão e o desvio médio para X. 
+# Qual a moda da variável qualitativa Y?
+
+summarise(dados,
+          media = mean(x),
+          mediana = median(x),
+          variancia = var(x),
+          desvio_padrao = sd(x),
+          desvio_médio = mean(abs(x - mean(x))),
+          )
+
+# Função para calcular a moda:
+
+moda <- function(x) {
+  which.max(table(dados$y) |> 
+              max() == table(dados$y))
+}
+
+# ou 
+
+moda = LETTERS[which.max(table(dados$y))]

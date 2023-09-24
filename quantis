@@ -1,0 +1,50 @@
+library(janitor)
+library(readxl)
+library(dplyr)
+options(scipen = 100, digits = 4)
+
+dados <- read_excel("~/dados5.xlsx")
+
+# Em tese, quantis se calculam da mesma forma que a mediana,
+# mas levam em consideração valores que não são a metade.
+# Existe inúmeras formas de se calcular o quantil. No R base são implementadas
+# apenas 9 formas. type 7 = R (default), type 2 = SAS, type 5 = moretin, type 6 = SPSS
+# q(p) é um valor que satisfaz: 
+# 100·p% das observações x1 satisfazem x1 ≤ q(p)
+
+q1 <- quantile(dados$x, probs = 0.25, digits = 2)
+q2 <-quantile(dados$x, probs = 0.5, digits = 2)
+q3 <- quantile(dados$x, probs = 0.75, digits = 2)
+q13 <- quantile(dados$x, probs = 0.13, digits = 2)
+q90 <- quantile(dados$x, probs = 0.90, digits = 2)
+
+# Considere o conjunto de dados com uma variável quantitativa contínua X. 
+# Calcule a os seguintes quantis:
+# Use duas casas decimais.
+# 
+# q1 = 237.8
+# q2 = 239.3
+# q3 = 240.7
+# q(0,13) = 236.9
+# q(0,9)= 242
+
+# |- - - - - - -| - - - - - - - -| - - - - - - -| - - - - - - -|
+# Q0           Q1               Q2              Q3              ?
+
+
+# Letter value -------------------------------------------------------------------------
+
+library(lettervalue)
+
+# Considere o conjunto de dados com uma variável quantitativa contínua X. 
+# Calcule os seguintes valores de letra:
+
+dados2 <- read_excel("~/quantis2.xlsx")
+
+letter_value(dados2$x, level = 4)
+
+# mediana = 225
+# minimo e máximo = 217.4 e 233.21 
+# F (inferior e superior) = 223.47 e 226.6
+# E (inferior e superior) = 222.44 e 227.72
+# D (inferior e superior) = 221.56 e 228.58

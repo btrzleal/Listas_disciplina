@@ -1,0 +1,45 @@
+library(janitor)
+library(readxl)
+library(dplyr)
+library(lettervalue)
+
+
+dados <- read_excel("~/dados_trimedia.xlsx")
+
+letter_value(dados$X, level = 9)
+
+
+# medidas_resumo_lettervalue ----------------------------------------------
+
+# n = 1569
+## 
+##      amostra                       
+##      ------------------------------
+## M 785|           104.12           |
+## F 393| 102.05              106.03 |
+## 1 1  | 94.7                114.07 |
+
+# Trimédia:
+  # (primeiro quartil / 4 +  mediana / 2 + terceiro quartil / 4)
+
+trimedia <- (102.05 + 2 * 104.12 + 106.03) / 4
+  
+trimedia
+
+# Diferença de quartis: 
+# • F-spread: dF = FU − FL, onde FU é o terceiro quartil e FL é o
+# primeiro quartil;
+
+fspd <- (106.03 - 102.05)
+
+# • F-pseudo sigma: (dF/ 1,379).
+
+f_pseudo_sigma <- fspd / 1.349
+
+# pseudosig <- function(x) unname(diff(quantile(x, c(0.25, 0.75)) / 1.35))
+
+f_pseudo_variance <- f_pseudo_sigma^2
+
+
+
+

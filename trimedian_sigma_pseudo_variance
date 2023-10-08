@@ -11,7 +11,7 @@ letter_value(dados$X, level = 9)
 # Identifique a letra, a profundidade e os valores de letra inferior e superior:
 # Obs: profundidade refere-se a posição em que valor se encontra perante todos os dados
 # M (representa a mediana), os valores inferior e superior da mediana são a própria mediana.
-# 1 representa os mínimos e máximos, e também a sua profundidade: o 1º número inferior e o 1º número superior 
+# 1 representa os mínimos e máximos, e também a sua profundidade: o 1º número inferior e o último número superior (1º número em ordem decrescente)
 
 
 

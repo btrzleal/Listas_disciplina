@@ -1,0 +1,55 @@
+library(pacman)
+
+p_load(
+  readxl, writexl, janitor, 
+  lettervalue, e1071, KbMvtSkew,
+  aplpack, lvplot, dados, ggthemes,
+  tidyverse
+)
+
+
+# gráfico de violino
+
+ggplot(iris, aes(x = "", y = comprimento_sepala)) +
+  geom_violin() +
+  geom_boxplot(width = 0.5) +
+  labs(x="", y="Comprimento de Sépala") +
+  theme_minimal()
+
+
+# Exercício ---------------------------------------------------------------
+
+sorocaba <- read_excel("dados/brutos/sorocaba.xlsx")
+
+# histograma + linha de densidade p/ nu_nota_mt
+
+k <- round(1 + log2(1000))
+
+sorocaba |> 
+  ggplot(aes(x = nu_nota_mt, y= after_stat(density))) +
+  geom_histogram(bins = k, fill = "red") +
+  geom_density(color = "black", linewidth = 2)
+
+# gráfico de violino para nu_nota_mt
+
+sorocaba |> 
+  ggplot(aes(x = "", y = nu_nota_mt)) +
+  geom_violin() +
+  geom_boxplot(width = 0.5)
+
+# gráfico de violino por nu_nota_mt por cor_raça
+
+sorocaba |> 
+  ggplot(aes(x = tp_cor_raca, y = nu_nota_mt)) +
+  geom_violin() +
+  geom_boxplot(width = 0.5) +
+  theme_bw()
+
+# gráfico LV
+
+sorocaba |> 
+  ggplot(aes(x = "", y = nu_nota_mt)) +
+  geom_lv(k = 8) +
+  geom_hline(yintercept = median(sorocaba$nu_nota_mt)) +
+  # geom_boxplot(width = 0.5) +
+  theme_bw()

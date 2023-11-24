@@ -1,0 +1,70 @@
+library(tidyverse)
+library(readxl)
+library(janitor)
+
+dados <- read_excel("~/dados_contingencia.xlsx")
+
+# Sejam X e Y duas variáveis qualitativas e 
+# uma amostra com 698 observações está disponível em dados.xlsx
+# calcule:
+
+ajuste <- chisq.test(dados$X, dados$Y)
+
+# tabela de contingencia
+
+ajuste$observed
+
+# tabela de contingencia esperada
+
+ajuste$expected
+
+# X² = x-square
+
+ajuste$statistic
+
+# Coeficiente de contigência modificada:
+
+ContCoef(dados$X, dados$Y)
+
+# Coeficiente V de Cramer: Resposta
+
+CramerV(dados$X, dados$Y)
+
+
+# tabyl -------------------------------------------------------------------
+
+# é possivel fazer a tabela de contingência pelo
+# tabyl também
+
+tabyl(dados, X, Y)
+
+
+# criar matriz ------------------------------------------------------------
+
+matriz <- rbind(
+  c(295, 37),
+  c(38, 285)
+)
+
+colnames(matriz) <- c("B1", "B2")
+rownames(matriz) <- c("A1", "A2")
+
+# A tabela de contingência esperada é dada por:
+
+ajuste <- janitor::chisq.test(matriz)
+
+tab_esp <- ajuste$expected
+
+# χ2: 
+
+# Coeficiente de contigência modificada:
+
+# Coeficiente V de Cramer: 
+
+estats <- c(
+  "qui2" = ajuste$statistic,
+  "cont_coef" = ContCoef(matriz),
+  "cramer_v" = CramerV(matriz)
+)
+
+estats

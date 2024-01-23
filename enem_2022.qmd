@@ -1,0 +1,251 @@
+---
+title: "Análise dos Microdados do ENEM para o município de Sorocaba/SP"
+author: "Beatriz Leal"
+lang: pt-BR
+execute: 
+  echo: false
+  warning: false
+  message: false
+  fig-align: center
+format:
+  pdf:
+    number-sections: true
+    geometry: 
+      - left=2cm
+      - right=2cm
+      - top=2cm
+      - bottom=2cm
+editor: visual
+editor_options: 
+  chunk_output_type: console
+pdf-engine: pdflatex
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+library(pacman)
+p_load(
+  readxl, writexl, 
+  janitor, e1071, KbMvtSkew, lettervalue, lvplot, aplpack,
+  DescTools,
+  ggthemes,
+  dados,
+  scales,
+  knitr,
+  tidyverse,
+  patchwork
+)
+
+sorocaba <- read_excel("~/sorocaba.xlsx") 
+
+sorocaba_limpo <- sorocaba |> 
+  filter(tp_escola != "Não respondeu" & tp_cor_raca != "Não declarado" & tp_cor_raca != "Indígena") 
+```
+
+## Resumo
+
+Levando em consideração a imutabilidade das questões de raça no Brasil, A Lei nº 12.711/2012, também chamada Lei de Cotas, determina que as instituições de ensino superiores públicas reservem 50% (cinquenta por cento) de suas vagas para estudantes que tenham cursado o ensino médio integralmente em escolas públicas. Contudo, baseando-se em argumentos meritocráticos, ainda há muita resistência por parte da sociedade acerca da adoção desse dispositivo. Diante desse contexto, o presente trabalho objetiva analisar os resultados do enem 2022 para uma amostra de 1.000 candidatos da cidade de Sorocaba/SP a fins de entender se as variáveis raça e tipo de escola exercem influência no desempenho desses candidatos. Utilizando-se métodos de análise descritiva e exploratória de dados, buscou-se apurar possíveis disparidades nos resultados dos candidatos. Os resultados aqui encontrados corroboram com as determinações previstas em lei ao apresentar indícios de desigualdades racial no campo do ensino brasileiro.
+
+## Introdução
+
+Instituído em 1998 com a finalidade de avaliar o desempenho dos estudantes brasileiros ao concluírem a educação básica, o Exame Nacional do Ensino Médio (Enem) tornou-se a principal via de acesso dos estudantes às instituições públicas de ensino superior. O acesso a essas instituições é viabilizado por meio da participação e seleção do candidato no Sistema de Seleção Unificada (Sisu), o qual basea-se na pontuação do candidato no Enem para critérios de classifcação.
+
+Embora o Sisu tenha por finalidade democratizar o acesso dos estudantes às instituições de ensino superior público, em sua versão preliminar, era facultado à universidade participante a decisão de adotar medidas de ação afirmativa para inclusão das camadas sociais mais desfavorecidas, isso a despeito de todos os indícios da desigualdade racial e social em curso no sistema educacional brasileiro. Esse cenário muda em 2012 com a promulgação a Lei nº 12.711 que tornou obrigatória a reserva de 50% das vagas para alunos egressos de escolas públicas, tornando-se uma das principais ferramentas para inserir jovens pretos, pardos e indígenas dentro dos espaços acadêmicos.
+
+Diante desse contexto, o presente trabalho objetiva analisar os resultados do enem 2022 para uma amostra de 1.000 candidatos a fins de entender se as variáveis raça e tipo de escola exercem influência no desempenho desses candidatos. Utilizando-se métodos de análise descritiva e exploratória de dados, buscou-se apurar possíveis disparidades nos resultados dessses candidatos.  Os resultados aqui encontrados corroboram com as determinações previstas em lei ao apresentar indícios das desigualdades raciais no campo do ensino brasileiro.
+
+## Materias e métodos
+
+Para realização desse estudo foi utilizado os dados do ENEM 2022 disponibilizados pelo INEP para o município de Sorocaba/SP. Essa base de dados contém informações detalhadas a respeito de cada candidato inscrito, incluindo: gabarito, nota obtida, tipo de escola, respostas ao questionário social, dentre outras. Neste estudo, foram considerados os dados referentes a 1.000 candidatos da cidade de Sorocaba/SP selecionados por meio de amostragem aleatória simples. 
+
+As etapas metodológicas englobam a realização de análises descritivas e exploratórias, tendo como referência teórica os pressupostos de Moretin e Bussab (2017) para gerar desde métricas mais simples, como estimativas de localização e variabilidade, até análises bidimensionais e suas representações de visuais. O estudo contou ainda com apoio do software estatístico R, aliado aos pacotes do Tidyverse, Janitor, Desctools, etc.
+
+## Resultados
+
+Esta seção apresenta os resultados obtidos a partir da análise dos resultados do Enem 2022 para uma amostra aleatória com 1.000 candidatos da cidade de Sorocoba/SP. Como o objetivo deste trabalho é averiguar se as variáveis raça e tipo de escola influenciam na nota do enem, se faz necessário, primeiramente, entender como essas variáveis estão expressas na amostra.
+
+O resultados dispostos nas Tabelas de frequência 1 e 2 buscam elucidar essa questão. A partir delas, podemos verificar que para essa amostra, o contingente de candidatos presentes auto-declarados brancos (73,3%) é maior que o contingente de candidatos auto-declarados negros[^1] (23,3%). Além disso, conforme demonstra a Tabela 2, observamos que a maioria desses candidatos são provenientes de instituições públicas, embora mais da metade dos respondentes (55%) optaram por não declarar a natureza de sua instituição de ensino.
+
+```{r}
+#| layout-ncol: 2
+#| tbl-cap: ["Raça", "Tipo de escola"]
+
+tab_raca <- tabyl(sorocaba, tp_cor_raca) |> 
+  adorn_totals() |> 
+  adorn_pct_formatting() |> 
+  # arrange(n) |> 
+  rename("Raça" = tp_cor_raca, "Frequência" = n, "Porcentagem" = percent)
+
+tab_escola <- tabyl(sorocaba, tp_escola) |> 
+  adorn_totals() |> 
+  adorn_pct_formatting() |> 
+  arrange(n) |> 
+  rename("Tipo de escola" = tp_escola, "Frequência" = n, "Porcentagem" = percent)
+
+kable(tab_raca)
+kable(tab_escola)
+```
+
+Indo mais afundo nos nossos objetivos, a etapa subsequente tem como propósito entender como esses diferentes estratos sociais tem desempenhado no enem, sobretudo levando em consideração a sua nota em matemática. Segundo os resultados da @tbl-resumo-raca, verifica-se que os melhores desempenhos em termos de média foram obtidos pelos candidatos Amarelos, seguido pelos candidatos Brancos. Verifica-se ainda a tendência de decrescimento da média conforme analisamos os grupos mais vulneráveis socialmente, como é o caso dos pardos e mais atenuemente, os pretos. Adicionalmente, a análise do desvio padrão evidencia outra condição: os candidatos de pele negra além de obter as piores notas, também obtém desempenho muito similares. Por fim, vale pontuar, que embora incluam-se na amostra candidatos indígenas, a presença de apenas três representantes dessa etnia compreende-se insuficiente para sustentar afirmações a respeito do desempenho de todo esse grupo.
+
+[^1]: Conforme convenção do IBGE, no Brasil, negro é o somatório da população pretos e pardo
+
+```{r}
+#| label: tbl-resumo-raca
+#| tbl-cap: Nota de matemática por raça
+
+resumo_tp_cor_raca <- sorocaba |> 
+  group_by(tp_cor_raca) |> 
+  summarise(
+    media_mt = mean(nu_nota_mt),
+    mediana_mt = median(nu_nota_mt),
+    variancia_mt = var(nu_nota_mt), 
+    desv_pad_mt = sd(nu_nota_mt), 
+    desv_medio_mt = mean(abs(nu_nota_mt - media_mt)),
+    amostra = n()
+  ) |> 
+  arrange(-media_mt) |> 
+  rename("Raça" = tp_cor_raca)
+
+kable(resumo_tp_cor_raca)
+```
+
+Analisando mais de perto a distribuição desses candidatos ao entorno da média, veremos dois tipos de assimetria: Para os candidatos Amarelos, a cauda mais longa da distribuição fica à esquerda, em assimetria negativa, demonstrando que a densidade das nontas desses candidatos é maior que a média geral deles. Observando atentamente o gráfico abaixo, nota-se a presença de valores externos muito abaixo do limite inferior nesse substrato e o formato platicúrtico de sua distribuição confirma a anomalia. No caso dos candidatos pardos, a cauda mais longa da distribuição fica à direita, indicando a ocorrência de notas mais altas em frequência menor, o que implica na assimetria positiva e em seu formato leptocúrtico. Os candidatos pretos seguem condições parecidas a dos pardos, porém com curva leptocúrtica mais acentuada, e os indígenas, como mencionado, não apresentam tamanho de amostra passível de análise.
+
+```{r}
+#| layout-ncol: 2
+#| fig-cap: "   "
+#| tbl-cap: "Coeficiente de Assimetria e Curtose"
+sorocaba |> 
+  ggplot(aes(x = tp_cor_raca, y = nu_nota_mt)) +
+  geom_violin() + 
+  geom_boxplot(width = 0.2, fill = "lightblue") + 
+  labs(x = "Cor/Raça", y = "Nota de matemática") + 
+  ggtitle("Diagrama de Caixas raça por nota em matemática") +
+  theme_bw()
+
+resumo_bowley <- sorocaba |> 
+  filter(tp_cor_raca != "Indígena" & tp_cor_raca != "Não declarado") |> 
+  group_by(tp_cor_raca) |> 
+  summarise(
+    Amostra = n(),
+    Assimetria = skewness(nu_nota_mt, type = 3),
+    Curtose = kurtosis(nu_nota_mt, type = 3),
+  ) |> 
+  rename("Raça" = tp_cor_raca)
+
+kable(resumo_bowley)
+
+```
+
+A Tabela 4 ratifica essas tendências ao demonstrar o Coeficiente de Assimetria para cada um desses agrupamentos. A fórmula do coeficiente é dada por $b1 = \sum_{i=1}^{n} \frac{Z_{i}^{3}}{n} = \frac{m_{3}}{S_{3}}$, onde $Z_{i} = \frac{x_{i}-\bar{x}}{S}$, $i = 1, 2, ..., n$ e corresponde a melhor estimativa em contexto de normalidade. Enquanto os candidatos Brancos tem um coefieciente de assimetria positivo leve, os candidatos negros tem assimetria positiva muito mais proeminente, indicando a concentração das notas nos valores mais baixos.
+
+Além disso, as questões relativas as desigualdades no âmbito educacional tornam-se ainda mais eminentes ao observamos os resultados da nota de matemática em função da escola que o candidato frequentou. Ao examinarmos @tbl-resumo-escola com os resumos abaixo, nota-se que o desempenho dos alunos da rede pública está muito abaixo quando comparado à média dos candidatos provenientes da rede particular.
+
+```{r}
+#| label: tbl-resumo-escola
+#| tbl-cap: Nota de matemática por tipo de escola
+
+resumo_tp_escola <- sorocaba |> 
+  group_by(tp_escola) |> 
+  summarise(
+    media_mt = mean(nu_nota_mt),
+    mediana_mt = median(nu_nota_mt),
+    variancia_mt = var(nu_nota_mt), 
+    desv_pad_mt = sd(nu_nota_mt), 
+    desv_medio_mt = mean(abs(nu_nota_mt - media_mt)),
+    Amostra = n()
+  ) |> 
+  arrange(media_mt) |> 
+  rename("Tipo de Escola" = tp_escola)
+
+kable(resumo_tp_escola)
+```
+
+Comparando-se o resultado das notas de matemática por raça e por tipo de escola em termos de sua distribuição, obtemos os gráficos Quantil-Quantil abaixo. Utilizando o método de padronização para quando $X_m<Y_n$, onde $Y$ é o quantil de ordem $\frac{j}{m}$ na variável $x$, verificamos que em ambos os casos, os dados se distanciam da diagonal, indicando que há diferenças significativas em termos de desempenho dos alunos em função de sua raça e de sua instituição de ensino. Isso sugere que esses candidatos não poderiam concorrer as mesmas vagas em pés de igualdade. 
+
+```{r}
+#| label: fig-escola
+#| fig-cap: "Comparação entre duas populações"
+#| out-width: 65%
+
+
+df_brancos <- sorocaba |> 
+  filter(tp_cor_raca == "Branca")
+df_negros <- sorocaba |> 
+  filter(tp_cor_raca %in% c("Preta", "Parda"))
+
+nu_nota_mt_brancos <- sort(df_brancos$nu_nota_mt)
+qtd_brancos <- length(nu_nota_mt_brancos)
+nu_nota_mt_negros <- quantile(df_negros$nu_nota_mt, probs = seq_len(qtd_brancos)  / qtd_brancos)
+
+df_grafico <- tibble(Brancos = nu_nota_mt_brancos, 
+                     Negros = nu_nota_mt_negros)
+
+p1 <- ggplot(df_grafico) +
+  geom_point(aes(x = Brancos, y = Negros)) +
+  geom_abline(intercept = 0, slope = 1, color = "blue") +
+  theme_bw()
+
+
+df_publica <- sorocaba |> 
+  filter(tp_escola == "Pública")
+
+df_privada <- sorocaba |> 
+  filter(tp_escola == "Privada")
+
+nu_nota_mt_publica <- sort(df_publica$nu_nota_mt)
+qtd_pub <- length(nu_nota_mt_publica)
+nu_nota_mt_privada <- quantile(df_privada$nu_nota_mt, probs = seq_len(qtd_pub)  / qtd_pub)
+
+df_grafico <- tibble(Publica = nu_nota_mt_publica, 
+                     Privada = nu_nota_mt_privada)
+
+p2 <- ggplot(df_grafico) +
+  geom_point(aes(x = Publica, y = Privada)) +
+  geom_abline(intercept = 0, slope = 1, color = "blue") +
+  theme_bw()
+
+(p1 | p2)
+
+```
+
+Por fim, analisando a composição das escolas pelo raça de seus candidatos, verifica-se que em termos de proporção, a população negra é a que mais prevalece nas instituições públicas. O coeficiente de cramer, definido por $C = \sqrt{\frac{x^2}{(k-1).n}}$, indica a existência de associação leve entre as duas variáveis
+
+```{r}
+#| layout-ncol: 2
+#| tbl-cap: "Tabela de contingência raça por escola"
+
+tbl <- CramerV(sorocaba_limpo$tp_cor_raca, sorocaba_limpo$tp_escola, conf.level = 0.95)
+
+kable(tbl)
+
+ggplot(sorocaba_limpo) +
+  geom_bar(aes(x = tp_cor_raca, fill = tp_escola), position = "fill")+
+  labs(x = "Cor/Raça", y = "Porcentual de alunos", fill = "Tipo de escola") +
+  scale_y_continuous(labels = label_percent()) +
+  scale_fill_brewer(palette = "Blues") +
+  theme_bw()
+```
+
+\newpage
+## Conclusão
+
+Esse trabalho objetivou analisar os dados do ENEM 2022 para a cidade de Sorocaba/SP a fins de verificar se haveria relacionamento das variáveis raça e escola no desempenho de 1.000 candidatos desse município. 
+
+No decurso desse estudo, foram reiteradamente observadas as discrepâncias vigentes entre as redes públicas e privadas para esta amostra. Por exemplo, quando  considerado o tipo de escola frequentada pelos alunos, o fato de que os candidatos da rede privada obtém melhor rendimento que os da rede pública fortalecem a hipótese aqui estudada de que as instituições de ensino tem impacto no desempenho dos candidatos. Em consonância a isso, quando verificado qual o segmento social mais prevalente na rede pública, os resultados observados também indicam a existência de desigualdades de oportunidades educacionais em função da cor de pele.
+
+As métricas aqui observadas podem ser somadas a tantas outras relativas a fatores históricos, sociais, culturais, economicos, como acesso ao trabalho digno, indíce de analfabetismo, taxa criminalidade, taxa de mortalidade, etc., de modo a comprovar essa disparidade no que tange as oportunidades existentes para as camadas mais vulneráveis socialmente. 
+
+É diante dessas evidências que o presente trabalho enxerga que as cotas possuem um potencial transformador indiscútivel para mudar essa realidade. 
+
+## Referências
+
+BRASIL. Lei nº 12.711, de 29 de agosto de 2012. Dispõe sobre o ingresso nas universidades federais e nas instituições federais de ensino técnico de nível médio e dá outras providências. **Diário Oficial da União**, Brasília, 30 ago. 2012. Seção 1, p. 1.
+
+MORETTIN, Pedro A.; BUSSAB, Wilton O.**Estatística básica**. Saraiva Educação SA, 2017.
+
+Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira. Microdados do ENEM. Ministério da Educação, 2022. Disponível em: https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/enem.
+
